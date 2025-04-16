@@ -1,0 +1,36 @@
+name: Deploy to AWS Elastic Beanstalk
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: '3.8'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+
+    - name: Deploy to Elastic Beanstalk
+      env:
+        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        AWS_REGION: 'ap-south-1'  # e.g., ap-south-1
+        EB_APP_NAME: 'my-flask-app '  # e.g., flask-ci-demo
+        EB_ENV_NAME: 'flask-ci-env'  # e.g., flask-ci-env
+      run: |
+        pip install awsebcli
+        eb init $EB_APP_NAME --region $AWS_REGION -p python-3.8 --interactive=false
+        eb use $EB_ENV_NAME
+        eb deploy
